@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "build": "npm run build --prefix server && npm run build --prefix client",
     "android:sync": "npm run build --prefix client && node scripts/sync-android-assets.mjs",
-    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run android:sync && node scripts/ensure-android-sdk.mjs && cd android && ./gradlew assembleDebug"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"

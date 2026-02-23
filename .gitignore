@@ -16,6 +16,8 @@
 
 # production
 /build
+/android/.gradle
+/android/local.properties
 
 # misc
 .DS_Store

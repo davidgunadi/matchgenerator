@@ -12,7 +12,85 @@ export interface MatchRound {
   matches: CourtMatch[];
 }
 
-const createPairKey = (a: string, b: string) => [a, b].sort().join("::");
+const BYE_TEAM = "__BYE__";
+
+const canPlaceMatchInRound = (round: TeamMatch[], match: TeamMatch, courts: number): boolean => {
+  if (round.length >= courts) {
+    return false;
+  }
+
+  return !round.some(
+    (scheduledMatch) =>
+      scheduledMatch.teamA === match.teamA ||
+      scheduledMatch.teamA === match.teamB ||
+      scheduledMatch.teamB === match.teamA ||
+      scheduledMatch.teamB === match.teamB,
+  );
+};
+
+const balanceRounds = (baseRounds: TeamMatch[][], courts: number): TeamMatch[][] => {
+  const balancedRounds: TeamMatch[][] = [];
+
+  for (const baseRound of baseRounds) {
+    for (const match of baseRound) {
+      let placed = false;
+
+      for (const round of balancedRounds) {
+        if (canPlaceMatchInRound(round, match, courts)) {
+          round.push(match);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        balancedRounds.push([match]);
+      }
+    }
+  }
+
+  return balancedRounds;
+};
+
+const generateRoundRobinRounds = (teams: string[]): TeamMatch[][] => {
+  const paddedTeams = [...teams];
+
+  if (paddedTeams.length % 2 !== 0) {
+    paddedTeams.push(BYE_TEAM);
+  }
+
+  const roundCount = paddedTeams.length - 1;
+  const halfSize = paddedTeams.length / 2;
+  const rotation = [...paddedTeams];
+  const rounds: TeamMatch[][] = [];
+
+  for (let round = 0; round < roundCount; round += 1) {
+    const matches: TeamMatch[] = [];
+
+    for (let index = 0; index < halfSize; index += 1) {
+      const teamA = rotation[index];
+      const teamB = rotation[rotation.length - 1 - index];
+
+      if (teamA !== BYE_TEAM && teamB !== BYE_TEAM) {
+        matches.push({ teamA, teamB });
+      }
+    }
+
+    rounds.push(matches);
+
+    const fixedTeam = rotation[0];
+    const rotatingTeams = rotation.slice(1);
+    const lastTeam = rotatingTeams.pop();
+
+    if (!lastTeam) {
+      break;
+    }
+
+    rotation.splice(0, rotation.length, fixedTeam, lastTeam, ...rotatingTeams);
+  }
+
+  return rounds;
+};
 
 export const generatePadelSchedule = (teams: string[], courts: number): MatchRound[] => {
   if (teams.length < 2) {
@@ -28,72 +106,14 @@ export const generatePadelSchedule = (teams: string[], courts: number): MatchRou
     throw new Error("Team names must be unique.");
   }
 
-  const pendingMatches: TeamMatch[] = [];
+  const roundRobinRounds = generateRoundRobinRounds(teams);
+  const balancedRounds = balanceRounds(roundRobinRounds, courts);
 
-  for (let i = 0; i < teams.length; i += 1) {
-    for (let j = i + 1; j < teams.length; j += 1) {
-      pendingMatches.push({ teamA: teams[i], teamB: teams[j] });
-    }
-  }
-
-  const rounds: MatchRound[] = [];
-  const previouslyScheduled = new Map<string, number>();
-
-  while (pendingMatches.length > 0) {
-    const usedTeams = new Set<string>();
-    const currentRound: TeamMatch[] = [];
-
-    pendingMatches.sort((left, right) => {
-      const leftScore =
-        (previouslyScheduled.get(createPairKey(left.teamA, left.teamB)) ?? 0) +
-        (usedTeams.has(left.teamA) ? 1 : 0) +
-        (usedTeams.has(left.teamB) ? 1 : 0);
-
-      const rightScore =
-        (previouslyScheduled.get(createPairKey(right.teamA, right.teamB)) ?? 0) +
-        (usedTeams.has(right.teamA) ? 1 : 0) +
-        (usedTeams.has(right.teamB) ? 1 : 0);
-
-      return leftScore - rightScore;
-    });
-
-    for (let i = pendingMatches.length - 1; i >= 0; i -= 1) {
-      if (currentRound.length >= courts) {
-        break;
-      }
-
-      const match = pendingMatches[i];
-      if (!usedTeams.has(match.teamA) && !usedTeams.has(match.teamB)) {
-        currentRound.push(match);
-        usedTeams.add(match.teamA);
-        usedTeams.add(match.teamB);
-        pendingMatches.splice(i, 1);
-
-        const matchKey = createPairKey(match.teamA, match.teamB);
-        previouslyScheduled.set(matchKey, (previouslyScheduled.get(matchKey) ?? 0) + 1);
-      }
-    }
-
-    if (currentRound.length === 0) {
-      // fallback should never happen, but guarantees progress
-      const forcedMatch = pendingMatches.shift();
-      if (!forcedMatch) {
-        break;
-      }
-
-      currentRound.push(forcedMatch);
-      const matchKey = createPairKey(forcedMatch.teamA, forcedMatch.teamB);
-      previouslyScheduled.set(matchKey, (previouslyScheduled.get(matchKey) ?? 0) + 1);
-    }
-
-    rounds.push({
-      round: rounds.length + 1,
-      matches: currentRound.map((match, index) => ({
-        ...match,
-        court: index + 1,
-      })),
-    });
-  }
-
-  return rounds;
+  return balancedRounds.map((matches, roundIndex) => ({
+    round: roundIndex + 1,
+    matches: matches.map((match, courtIndex) => ({
+      ...match,
+      court: courtIndex + 1,
+    })),
+  }));
 };

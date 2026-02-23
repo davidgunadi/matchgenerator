@@ -1,24 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 
-interface CourtMatch {
-  teamA: string;
-  teamB: string;
-  court: number;
-}
-
-interface MatchRound {
-  round: number;
-  matches: CourtMatch[];
-}
-
-interface ScheduleResponse {
-  teams: number;
-  courts: number;
-  totalMatches: number;
-  rounds: MatchRound[];
-}
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+import { ScheduleResponse, generatePadelSchedule } from "./generator";
 
 export default function App() {
   const [teamCount, setTeamCount] = useState(4);
@@ -59,21 +41,7 @@ export default function App() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/generate-matches`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ teams: visibleTeamNames, courts }),
-      });
-
-      const payload = (await response.json()) as ScheduleResponse | { error: string };
-
-      if (!response.ok || "error" in payload) {
-        setError(payload.error ?? "Unable to generate matches");
-        return;
-      }
-
+      const payload = generatePadelSchedule(visibleTeamNames.map((team) => team.trim()).filter(Boolean), courts);
       setSchedule(payload);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Request failed");

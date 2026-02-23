@@ -44,7 +44,7 @@ The frontend is now self-contained and can run without the backend when packaged
 npm run android:sync
 ```
 
-3. Build debug APK:
+3. Build debug APK (uses `android/gradlew`, so global Gradle install is optional):
 
 ```bash
 npm run android:apk

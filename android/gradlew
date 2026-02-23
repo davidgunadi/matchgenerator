@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GRADLE_VERSION="${GRADLE_VERSION:-8.14.3}"
+DIST_DIR="${SCRIPT_DIR}/.gradle-dist"
+DIST_NAME="gradle-${GRADLE_VERSION}"
+DIST_URL="${GRADLE_DIST_URL:-https://services.gradle.org/distributions/${DIST_NAME}-bin.zip}"
+LOCAL_GRADLE="${DIST_DIR}/${DIST_NAME}/bin/gradle"
+
+if [[ -x "${LOCAL_GRADLE}" ]]; then
+  exec "${LOCAL_GRADLE}" "$@"
+fi
+
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle "$@"
+fi
+
+mkdir -p "${DIST_DIR}"
+ZIP_PATH="${DIST_DIR}/${DIST_NAME}-bin.zip"
+
+if [[ ! -f "${ZIP_PATH}" ]]; then
+  echo "Gradle not found. Downloading ${DIST_URL} ..."
+  curl -fL "${DIST_URL}" -o "${ZIP_PATH}"
+fi
+
+if [[ ! -x "${LOCAL_GRADLE}" ]]; then
+  echo "Extracting ${ZIP_PATH} ..."
+  unzip -qo "${ZIP_PATH}" -d "${DIST_DIR}"
+fi
+
+exec "${LOCAL_GRADLE}" "$@"

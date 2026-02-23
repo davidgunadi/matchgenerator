@@ -1,0 +1,92 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #172433;
+  background-color: #eaf2f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  min-height: 100vh;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 20px rgb(20 45 70 / 8%);
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  font-size: 0.95rem;
+  gap: 0.35rem;
+}
+
+input {
+  border: 1px solid #c8d4de;
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  font-size: 1rem;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  background: #0a7dff;
+  color: #fff;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.team-list {
+  background: #f5f9fc;
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.rounds {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.round-card {
+  border: 1px solid #d5e2ee;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.round-card ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.error {
+  color: #c22626;
+  font-weight: 600;
+}

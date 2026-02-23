@@ -37,14 +37,15 @@ npm run build
 
 The frontend is now self-contained and can run without the backend when packaged in Android.
 
-1. Install Android SDK (API 34) and set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`).
+1. Install Android SDK (API 34) and JDK 17-21. Set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`).
 2. Build and copy web assets into the Android project:
 
 ```bash
 npm run android:sync
 ```
 
-3. Build debug APK (uses `android/gradlew`, so global Gradle install is optional):
+3. Build debug APK (uses `android/gradlew`, so global Gradle install is optional).
+   The script will auto-create `android/local.properties` from `ANDROID_HOME`/`ANDROID_SDK_ROOT` if needed:
 
 ```bash
 npm run android:apk

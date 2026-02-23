@@ -14,6 +14,7 @@ A simple full-stack app to create padel team-vs-team match schedules with limite
 - **Backend**: TypeScript + Express (`/server`)
 - **Frontend**: React + TypeScript + Vite (`/client`)
 - **Storage**: none (in-memory generation only)
+- **Android wrapper**: Native Android WebView (`/android`)
 
 ## Run locally
 
@@ -30,4 +31,27 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+## Build an APK
+
+The frontend is now self-contained and can run without the backend when packaged in Android.
+
+1. Install Android SDK (API 34) and set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`).
+2. Build and copy web assets into the Android project:
+
+```bash
+npm run android:sync
+```
+
+3. Build debug APK:
+
+```bash
+npm run android:apk
+```
+
+APK output:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
 ```

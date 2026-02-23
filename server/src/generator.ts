@@ -14,14 +14,42 @@ export interface MatchRound {
 
 const BYE_TEAM = "__BYE__";
 
-const chunkMatches = (matches: TeamMatch[], size: number): TeamMatch[][] => {
-  const chunks: TeamMatch[][] = [];
-
-  for (let index = 0; index < matches.length; index += size) {
-    chunks.push(matches.slice(index, index + size));
+const canPlaceMatchInRound = (round: TeamMatch[], match: TeamMatch, courts: number): boolean => {
+  if (round.length >= courts) {
+    return false;
   }
 
-  return chunks;
+  return !round.some(
+    (scheduledMatch) =>
+      scheduledMatch.teamA === match.teamA ||
+      scheduledMatch.teamA === match.teamB ||
+      scheduledMatch.teamB === match.teamA ||
+      scheduledMatch.teamB === match.teamB,
+  );
+};
+
+const balanceRounds = (baseRounds: TeamMatch[][], courts: number): TeamMatch[][] => {
+  const balancedRounds: TeamMatch[][] = [];
+
+  for (const baseRound of baseRounds) {
+    for (const match of baseRound) {
+      let placed = false;
+
+      for (const round of balancedRounds) {
+        if (canPlaceMatchInRound(round, match, courts)) {
+          round.push(match);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        balancedRounds.push([match]);
+      }
+    }
+  }
+
+  return balancedRounds;
 };
 
 const generateRoundRobinRounds = (teams: string[]): TeamMatch[][] => {
@@ -79,21 +107,13 @@ export const generatePadelSchedule = (teams: string[], courts: number): MatchRou
   }
 
   const roundRobinRounds = generateRoundRobinRounds(teams);
-  const rounds: MatchRound[] = [];
+  const balancedRounds = balanceRounds(roundRobinRounds, courts);
 
-  for (const baseRound of roundRobinRounds) {
-    const splitRounds = chunkMatches(baseRound, courts);
-
-    for (const splitRound of splitRounds) {
-      rounds.push({
-        round: rounds.length + 1,
-        matches: splitRound.map((match, index) => ({
-          ...match,
-          court: index + 1,
-        })),
-      });
-    }
-  }
-
-  return rounds;
+  return balancedRounds.map((matches, roundIndex) => ({
+    round: roundIndex + 1,
+    matches: matches.map((match, courtIndex) => ({
+      ...match,
+      court: courtIndex + 1,
+    })),
+  }));
 };
